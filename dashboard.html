@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Brew Haven — Lead Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --gold:       #c8903a;
+      --gold-l:     #e8b060;
+      --gold-dim:   #7a5520;
+      --bg:         #080604;
+      --surface:    #110e08;
+      --surface2:   #1c1510;
+      --surface3:   #251c12;
+      --border:     #2a1e0e;
+      --text:       #ede0cc;
+      --muted:      #7a6a55;
+      --green:      #4caf7d;
+      --green-bg:   #0d2318;
+      --amber:      #f0a530;
+      --amber-bg:   #231500;
+      --red:        #e05a5a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: 220px; height: 100vh;
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 28px 0; z-index: 50;
+    }
+    .logo { padding: 0 24px 28px; border-bottom: 1px solid var(--border); }
+    .logo-mark { font-size: 22px; font-weight: 800; color: var(--gold); letter-spacing: -0.5px; }
+    .logo-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+    .nav { padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: all 0.2s;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item.active, .nav-item:hover { background: var(--surface3); color: var(--text); }
+    .nav-item.active { color: var(--gold); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 20px 24px 0; border-top: 1px solid var(--border); }
+    .sidebar-footer-text { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+
+    /* logout button in sidebar */
+    .btn-logout-side {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: all 0.2s;
+      border: none; background: none; width: 100%; text-align: left;
+      margin-top: 8px;
+    }
+    .btn-logout-side:hover { background: rgba(224,90,90,0.08); color: var(--red); }
+
+    /* ── MAIN ── */
+    .main { margin-left: 220px; min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      padding: 20px 32px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface); position: sticky; top: 0; z-index: 40;
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .btn { padding: 8px 18px; border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-ghost { background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--gold-dim); color: var(--gold); }
+    .btn-primary { background: var(--gold); color: var(--bg); }
+    .btn-primary:hover { background: var(--gold-l); }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'DM Mono', monospace; font-size: 11px; color: var(--green);
+      background: var(--green-bg); padding: 5px 12px; border-radius: 20px;
+      border: 1px solid rgba(76,175,125,0.2);
+    }
+    .live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── CONTENT ── */
+    .content { padding: 28px 32px; flex: 1; }
+
+    /* ── STAT CARDS ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+    .stat-value { font-size: 32px; font-weight: 800; color: var(--text); line-height: 1; }
+    .stat-value.gold { color: var(--gold); }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    /* ── FILTER ROW ── */
+    .filter-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .filter-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+    .filter-btn {
+      padding: 6px 14px; border-radius: 20px;
+      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600;
+      border: 1px solid var(--border); background: none; color: var(--muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(200,144,58,0.06); }
+
+    /* ── DATE GROUP ── */
+    .date-group { margin-bottom: 28px; }
+    .date-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .date-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; }
+    .date-line { flex: 1; height: 1px; background: var(--border); }
+    .date-count { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+
+    /* ── LEAD CARD ── */
+    .leads-grid { display: flex; flex-direction: column; gap: 10px; }
+    .lead-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 20px;
+      display: grid; grid-template-columns: 40px 1fr 1fr auto auto;
+      align-items: center; gap: 16px;
+      transition: border-color 0.2s, background 0.2s;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    .lead-card:hover { border-color: var(--gold-dim); background: var(--surface2); }
+    .lead-avatar {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 700; color: var(--bg); flex-shrink: 0;
+    }
+    .lead-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .lead-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+    .lead-phone { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); margin-bottom: 3px; }
+    .lead-req { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+    .status-badge {
+      padding: 4px 12px; border-radius: 20px;
+      font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+      white-space: nowrap; cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .status-new { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(240,165,48,0.2); }
+    .status-contacted { background: var(--green-bg); color: var(--green); border: 1px solid rgba(76,175,125,0.2); }
+    .lead-actions { display: flex; gap: 8px; }
+    .action-btn {
+      width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+      background: none; color: var(--muted); font-size: 15px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(200,144,58,0.06); }
+    .action-btn.wa:hover { border-color: #25d366; color: #25d366; background: rgba(37,211,102,0.06); }
+    .action-btn.del:hover { border-color: var(--red); color: var(--red); background: rgba(224,90,90,0.06); }
+
+    /* ── EMPTY / LOADING ── */
+    .empty { text-align: center; padding: 80px 20px; color: var(--muted); }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+    .empty-sub { font-size: 13px; }
+    .loading { text-align: center; padding: 60px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 13px; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface3); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 20px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; z-index: 999;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* fade overlay */
+    .flash { position: fixed; inset: 0; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; z-index: 998; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .stats-row { grid-template-columns: repeat(2,1fr); }
+      .lead-card { grid-template-columns: 40px 1fr auto; }
+      .lead-phone-col, .lead-req-col { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">☕ Brew Haven</div>
+    <div class="logo-sub">Owner Dashboard</div>
+  </div>
+  <div class="nav">
+    <button class="nav-item active">
+      <span class="nav-icon">📋</span> Leads
+    </button>
+    <button class="nav-item" onclick="showToast('Coming soon!')">
+      <span class="nav-icon">📊</span> Analytics
+    </button>
+    <button class="nav-item" onclick="showToast('Coming soon!')">
+      <span class="nav-icon">⚙️</span> Settings
+    </button>
+    <button class="btn-logout-side" onclick="logout()">
+      <span class="nav-icon">🚪</span> Sign Out
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-text">v1.0 · MVP</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Lead Management</div>
+    <div class="topbar-actions">
+      <div class="live-badge"><span class="live-dot"></span> Live</div>
+      <button class="btn btn-ghost" onclick="loadLeads()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Leads</div>
+        <div class="stat-value gold" id="statTotal">—</div>
+        <div class="stat-sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Today</div>
+        <div class="stat-value" id="statToday">—</div>
+        <div class="stat-sub" id="statTodayDate">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">New</div>
+        <div class="stat-value" id="statNew">—</div>
+        <div class="stat-sub">Awaiting follow-up</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Contacted</div>
+        <div class="stat-value" id="statContacted">—</div>
+        <div class="stat-sub">Follow-up done</div>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <span class="filter-label">Filter:</span>
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('New', this)">🟡 New</button>
+      <button class="filter-btn" onclick="setFilter('Contacted', this)">🟢 Contacted</button>
+    </div>
+
+    <div id="leadsContainer">
+      <div class="loading">Loading leads...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── AUTH GUARD using localStorage ──
+  // localStorage persists across pages opened from the same local folder
+  if (!localStorage.getItem('bh_auth')) {
+    window.location.replace('login.html');
+  }
+
+  // Fade in on load
+  window.addEventListener('load', () => {
+    setTimeout(() => { document.getElementById('flash').style.opacity = '0'; }, 50);
+  });
+
+  function logout() {
+    localStorage.removeItem('bh_auth');
+    localStorage.removeItem('bh_loginTime');
+    document.getElementById('flash').style.opacity = '1';
+    setTimeout(() => { window.location.href = 'login.html'; }, 400);
+  }
+
+  // ── LEADS ──
+  const API = 'http://localhost:8000';
+  let allLeads = [];
+  let currentFilter = 'all';
+
+  setInterval(loadLeads, 15000);
+
+  async function loadLeads() {
+    try {
+      const res = await fetch(`${API}/leads`);
+      const data = await res.json();
+      allLeads = data.leads || [];
+      updateStats(allLeads);
+      renderLeads();
+    } catch (e) {
+      document.getElementById('leadsContainer').innerHTML =
+        `<div class="empty">
+          <div class="empty-icon">⚠️</div>
+          <div class="empty-title">Cannot reach backend</div>
+          <div class="empty-sub">Make sure the server is running at ${API}</div>
+        </div>`;
+    }
+  }
+
+  function updateStats(leads) {
+    const today = new Date().toISOString().slice(0, 10);
+    document.getElementById('statTotal').textContent = leads.length;
+    document.getElementById('statToday').textContent = leads.filter(l => l.date === today).length;
+    document.getElementById('statTodayDate').textContent = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+    document.getElementById('statNew').textContent = leads.filter(l => l.status === 'New').length;
+    document.getElementById('statContacted').textContent = leads.filter(l => l.status === 'Contacted').length;
+  }
+
+  function setFilter(f, el) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    renderLeads();
+  }
+
+  function renderLeads() {
+    const filtered = currentFilter === 'all'
+      ? allLeads
+      : allLeads.filter(l => l.status === currentFilter);
+
+    if (filtered.length === 0) {
+      document.getElementById('leadsContainer').innerHTML =
+        `<div class="empty"><div class="empty-icon">☕</div><div class="empty-title">No leads yet</div><div class="empty-sub">Leads captured from the chat will appear here.</div></div>`;
+      return;
+    }
+
+    const groups = {};
+    [...filtered].sort((a,b) => b.timestamp.localeCompare(a.timestamp)).forEach(lead => {
+      const d = lead.display_date;
+      if (!groups[d]) groups[d] = [];
+      groups[d].push(lead);
+    });
+
+    const today = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    let html = '';
+    for (const [date, leads] of Object.entries(groups)) {
+      const label = date === today ? `Today — ${date}` : date;
+      html += `
+        <div class="date-group">
+          <div class="date-header">
+            <span class="date-label">${label}</span>
+            <span class="date-line"></span>
+            <span class="date-count">${leads.length} lead${leads.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="leads-grid">${leads.map(renderLeadCard).join('')}</div>
+        </div>`;
+    }
+    document.getElementById('leadsContainer').innerHTML = html;
+  }
+
+  function renderLeadCard(lead) {
+    const initials = lead.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const statusClass = lead.status === 'New' ? 'status-new' : 'status-contacted';
+    const statusLabel = lead.status === 'New' ? '⬤ New' : '✓ Contacted';
+    const waMsg = encodeURIComponent(
+      `Hi ${lead.name}! You were interested in ${lead.requirement} at Brew Haven. When would you like to visit? We are open 9 AM to 9 PM at City Center.`
+    );
+    const waLink = `https://wa.me/91${lead.phone}?text=${waMsg}`;
+    return `
+      <div class="lead-card" id="card-${lead.id}">
+        <div class="lead-avatar">${initials}</div>
+        <div>
+          <div class="lead-name">${escHtml(lead.name)}</div>
+          <div class="lead-time">${lead.time}</div>
+        </div>
+        <div class="lead-phone-col">
+          <div class="lead-phone">${lead.phone}</div>
+          <div class="lead-req" title="${escHtml(lead.requirement)}">${escHtml(lead.requirement)}</div>
+        </div>
+        <button class="status-badge ${statusClass}" onclick="toggleStatus('${lead.id}', '${lead.status}')">${statusLabel}</button>
+        <div class="lead-actions">
+          <a href="${waLink}" target="_blank" title="Open WhatsApp">
+            <button class="action-btn wa">💬</button>
+          </a>
+          <button class="action-btn del" title="Delete lead" onclick="deleteLead('${lead.id}')">🗑</button>
+        </div>
+      </div>`;
+  }
+
+  async function toggleStatus(id, current) {
+    const next = current === 'New' ? 'Contacted' : 'New';
+    try {
+      await fetch(`${API}/leads/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next })
+      });
+      await loadLeads();
+      showToast(`Marked as ${next}`);
+    } catch (e) { showToast('Error updating status'); }
+  }
+
+  async function deleteLead(id) {
+    if (!confirm('Delete this lead?')) return;
+    try {
+      await fetch(`${API}/leads/${id}`, { method: 'DELETE' });
+      await loadLeads();
+      showToast('Lead deleted');
+    } catch (e) { showToast('Error deleting lead'); }
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  loadLeads();
+</script>
+</body>
+</html>

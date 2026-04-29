@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Brew Haven</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0f; --surface: #141416;
+    --border: rgba(255,255,255,0.08); --border-focus: rgba(255,255,255,0.25);
+    --text: #f0ede8; --muted: #6b6966;
+    --accent: #e8c97a; --danger: #e05a5a; --danger-dim: rgba(224,90,90,0.1);
+  }
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; display: flex;
+    align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 80%, rgba(232,201,122,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 60% at 80% 20%, rgba(90,191,138,0.03) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none;
+  }
+  .wrapper { position: relative; z-index: 10; width: 100%; max-width: 420px; padding: 2rem; }
+  .brand { text-align: center; margin-bottom: 2.5rem; }
+  .brand-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    border: 1px solid rgba(232,201,122,0.3);
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem; background: rgba(232,201,122,0.06); font-size: 24px;
+  }
+  h1 { font-family: 'DM Serif Display', serif; font-size: 1.75rem; font-weight: 400; letter-spacing: -0.01em; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .subtitle { font-size: 0.72rem; color: var(--muted); margin-top: 0.4rem; letter-spacing: 0.06em; text-transform: uppercase; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2rem; position: relative; overflow: hidden;
+    animation: fadeIn 0.4s ease both;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,201,122,0.2), transparent);
+  }
+  .field { margin-bottom: 1.25rem; }
+  label { display: block; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+  .input-wrap { position: relative; display: flex; align-items: center; }
+  .input-icon { position: absolute; left: 0.875rem; color: var(--muted); pointer-events: none; transition: color 0.2s; z-index: 1; }
+  .input-wrap:focus-within .input-icon { color: var(--accent); }
+  input {
+    width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.75rem 0.875rem 0.75rem 2.75rem;
+    font-family: 'DM Mono', monospace; font-size: 0.85rem; color: var(--text);
+    outline: none; transition: border-color 0.2s, background 0.2s;
+  }
+  input::placeholder { color: var(--muted); }
+  input:focus { border-color: rgba(232,201,122,0.4); background: rgba(255,255,255,0.06); }
+  input.error-field { border-color: rgba(224,90,90,0.5); }
+  .toggle-pw {
+    position: absolute; right: 0.875rem; background: none; border: none;
+    color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.2s;
+  }
+  .toggle-pw:hover { color: var(--text); }
+  .error-msg {
+    display: none; align-items: center; gap: 0.5rem;
+    background: var(--danger-dim); border: 1px solid rgba(224,90,90,0.25);
+    border-radius: 8px; padding: 0.65rem 0.875rem;
+    font-size: 0.75rem; color: var(--danger); margin-bottom: 1.25rem;
+  }
+  .error-msg.show { display: flex; }
+  .error-msg.shake { animation: shake 0.35s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 60%{transform:translateX(6px)} }
+  .btn-login {
+    width: 100%; padding: 0.8rem; background: var(--accent); border: none;
+    border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 0.8rem;
+    font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #1a1600; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-login:hover { opacity: 0.88; }
+  .btn-login:active { transform: scale(0.99); }
+  .btn-login:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-login .spinner {
+    display: none; width: 14px; height: 14px;
+    border: 2px solid rgba(0,0,0,0.3); border-top-color: #1a1600;
+    border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn-login.loading .btn-text { display: none; }
+  .btn-login.loading .spinner { display: block; }
+  .hint { text-align: center; margin-top: 1.25rem; font-size: 0.65rem; color: var(--muted); letter-spacing: 0.04em; }
+  .attempts-left { color: var(--danger); }
+  .flash { position: fixed; inset: 0; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity 0.4s ease; z-index: 999; }
+  .flash.go { opacity: 1; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="flash" id="flash"></div>
+<div class="wrapper">
+  <div class="brand">
+    <div class="brand-icon">☕</div>
+    <h1>Brew <em>Haven</em></h1>
+    <p class="subtitle">Owner Portal &mdash; Restricted Access</p>
+  </div>
+  <div class="card">
+    <div class="error-msg" id="errorMsg">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="errorText">Invalid credentials</span>
+    </div>
+    <div class="field">
+      <label for="username">Username</label>
+      <div class="input-wrap">
+        <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        <input type="text" id="username" placeholder="enter username" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="input-wrap">
+        <svg class="input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <input type="password" id="password" placeholder="enter password" autocomplete="off">
+        <button class="toggle-pw" onclick="togglePw()" id="toggleBtn">show</button>
+      </div>
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="attemptLogin()">
+      <span class="btn-text">Sign In</span>
+      <div class="spinner"></div>
+    </button>
+    <p class="hint" id="hint">Brew Haven &mdash; all access is logged</p>
+  </div>
+</div>
+<script>
+  const CREDS = { username: 'admin', password: '1234' };
+  const MAX = 5;
+  let attempts = 0, locked = false;
+  const loginBtn  = document.getElementById('loginBtn');
+  const errorMsg  = document.getElementById('errorMsg');
+  const errorText = document.getElementById('errorText');
+  const hint      = document.getElementById('hint');
+  const userInput = document.getElementById('username');
+  const passInput = document.getElementById('password');
+
+  userInput.addEventListener('keydown', e => { if (e.key==='Enter') passInput.focus(); });
+  passInput.addEventListener('keydown', e => { if (e.key==='Enter') attemptLogin(); });
+  [userInput, passInput].forEach(i => i.addEventListener('input', clearError));
+  userInput.focus();
+
+  function clearError() {
+    errorMsg.classList.remove('show','shake');
+    userInput.classList.remove('error-field');
+    passInput.classList.remove('error-field');
+  }
+  function togglePw() {
+    passInput.type = passInput.type==='password' ? 'text' : 'password';
+    document.getElementById('toggleBtn').textContent = passInput.type==='password' ? 'show' : 'hide';
+  }
+  function showError(msg) {
+    errorText.textContent = msg;
+    errorMsg.classList.remove('shake');
+    void errorMsg.offsetWidth;
+    errorMsg.classList.add('show','shake');
+    userInput.classList.add('error-field');
+    passInput.classList.add('error-field');
+  }
+  function attemptLogin() {
+    if (locked) return;
+    const user = userInput.value.trim();
+    const pass = passInput.value;
+    if (!user || !pass) { showError('Please fill in all fields.'); return; }
+    loginBtn.classList.add('loading');
+    loginBtn.disabled = true;
+    setTimeout(() => {
+      if (user === CREDS.username && pass === CREDS.password) {
+        // localStorage persists across pages opened from the same folder
+        localStorage.setItem('bh_auth', 'true');
+        localStorage.setItem('bh_loginTime', new Date().toISOString());
+        document.getElementById('flash').classList.add('go');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 400);
+      } else {
+        loginBtn.classList.remove('loading');
+        loginBtn.disabled = false;
+        attempts++;
+        const rem = MAX - attempts;
+        if (attempts >= MAX) {
+          locked = true;
+          showError('Account locked — too many attempts.');
+          loginBtn.disabled = true; loginBtn.style.opacity = '0.4';
+          hint.innerHTML = '<span class="attempts-left">Locked — refresh to reset</span>';
+        } else {
+          showError(`Invalid credentials. ${rem} attempt${rem!==1?'s':''} remaining.`);
+          hint.innerHTML = `<span class="attempts-left">${rem} attempt${rem!==1?'s':''} left</span>`;
+        }
+        passInput.value = ''; passInput.focus();
+      }
+    }, 700);
+  }
+</script>
+</body>
+</html>

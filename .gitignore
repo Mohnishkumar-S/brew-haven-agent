@@ -1,0 +1,12 @@
+# Python environment
+venv/
+
+# Cache files
+__pycache__/
+*.pyc
+
+# Secrets (VERY IMPORTANT)
+.env
+
+# Local data (do not upload)
+leads.json
